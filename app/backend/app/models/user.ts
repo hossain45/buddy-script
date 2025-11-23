@@ -1,8 +1,13 @@
 import { DateTime } from '../../node_modules/@types/luxon/index.js'
-import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import hash from '@adonisjs/core/services/hash'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+import Post from './post.js'
+import Comment from './Comment.js'
+import PostLike from './post_like.js'
+import CommentLike from './comment_like.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -14,7 +19,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare id: number
 
   @column()
-  declare fullName: string | null
+  declare firstName: string
+
+  @column()
+  declare lastName: string
 
   @column()
   declare email: string
@@ -26,5 +34,17 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime | null
+  declare updatedAt: DateTime
+
+  @hasMany(() => Post)
+  public posts!: HasMany<typeof Post>
+
+  @hasMany(() => Comment)
+  public comments!: HasMany<typeof Comment>
+
+  @hasMany(() => PostLike)
+  public postLikes!: HasMany<typeof PostLike>
+
+  @hasMany(() => CommentLike)
+  public commentLikes!: HasMany<typeof CommentLike>
 }
