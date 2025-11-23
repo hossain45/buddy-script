@@ -8,7 +8,7 @@ export default class LikeController {
    * frontend will handle if it's already liked
    * @param params - The post ID
    */
-  async likePost({ params, auth }: HttpContext) {
+  async likePost({ params, auth, response }: HttpContext) {
     const user = auth.user!
     const postId = params.id
 
@@ -17,7 +17,14 @@ export default class LikeController {
       postId,
     })
 
-    return { message: 'Post liked' }
+    const likesCount = await PostLike.query().where('post_id', postId).count('* as total')
+    const totalLikes = Number(likesCount[0].$extras.total)
+
+    return response.json({
+      message: 'Post liked',
+      postId,
+      likesCount: totalLikes,
+    })
   }
 
   /**
@@ -25,25 +32,36 @@ export default class LikeController {
    * frontend will handle if it's already unliked
    * @param params - The post ID
    */
-  async unlikePost({ params, auth }: HttpContext) {
+  async unlikePost({ params, auth, response }: HttpContext) {
     const user = auth.user!
     const postId = params.id
 
     const like = await PostLike.findByOrFail({ userId: user.id, postId })
     await like.delete()
 
-    return { message: 'Post unliked' }
+    const likesCount = await PostLike.query().where('post_id', postId).count('* as total')
+    const totalLikes = Number(likesCount[0].$extras.total)
+
+    return response.json({
+      message: 'Post unliked',
+      postId,
+      likesCount: totalLikes,
+    })
   }
 
   /**
    * like state  of a post
    * @param params - The post ID
    */
-  async likeState({ params }: HttpContext) {
+  async likeState({ params, response }: HttpContext) {
     const postId = params.id
 
     const likes = await PostLike.findManyBy({ postId })
-    return { likesCount: likes.length }
+
+    return response.json({
+      postId,
+      likesCount: likes.length,
+    })
   }
 
   /**
@@ -51,13 +69,20 @@ export default class LikeController {
    * frontend will handle if it's already liked
    * @param params - The comment ID
    */
-  async likeComment({ params, auth }: HttpContext) {
+  async likeComment({ params, auth, response }: HttpContext) {
     const user = auth.user!
     const commentId = params.id
 
     await CommentLike.create({ userId: user.id, commentId })
 
-    return { message: 'Comment liked' }
+    const likesCount = await CommentLike.query().where('comment_id', commentId).count('* as total')
+    const totalLikes = Number(likesCount[0].$extras.total)
+
+    return response.json({
+      message: 'Comment liked',
+      commentId,
+      likesCount: totalLikes,
+    })
   }
 
   /**
@@ -65,14 +90,20 @@ export default class LikeController {
    * frontend will handle if it's already unliked
    * @param params - The comment ID
    */
-  async unlikeComment({ params, auth }: HttpContext) {
+  async unlikeComment({ params, auth, response }: HttpContext) {
     const user = auth.user!
     const commentId = params.id
 
     const like = await CommentLike.findByOrFail({ userId: user.id, commentId })
     await like.delete()
 
-    return { message: 'Comment unliked' }
+    const likesCount = await CommentLike.query().where('comment_id', commentId).count('* as total')
+    const totalLikes = Number(likesCount[0].$extras.total)
+
+    return response.json({
+      message: 'Comment unliked',
+      commentId,
+      likesCount: totalLikes,
+    })
   }
 }
-

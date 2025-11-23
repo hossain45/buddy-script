@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Post from '#models/post'
 import PostMedia from '#models/post_media'
-import PostLike from '#models/post_like'
 import env from '#start/env'
 import axios from 'axios'
 import fs from 'node:fs'
@@ -10,7 +9,7 @@ export default class PostController {
   /**
    * Get feed (public posts + user's private posts)
    */
-  async index({ auth }: HttpContext) {
+  async index({ auth, response }: HttpContext) {
     const user = auth.user!
 
     const posts = await Post.query()
@@ -38,13 +37,16 @@ export default class PostController {
       }
     })
 
-    return formatted
+    return response.json({
+      posts: formatted,
+      count: formatted.length,
+    })
   }
 
   /**
    * Create a new post (with IMGBB image upload)
    */
-  async createPost({ request, auth }: HttpContext) {
+  async createPost({ request, auth, response }: HttpContext) {
     const user = auth.user!
 
     const { text, visibility } = request.only(['text', 'visibility'])
@@ -90,35 +92,55 @@ export default class PostController {
       })
     }
 
-    return {
+    // Refresh and load relationships
+    await post.refresh()
+    await post.load('author')
+    await post.load('media')
+    await post.load('likes')
+
+    return response.json({
       message: 'Post created successfully',
-      post: await post.refresh(),
-    }
+      post: post.serialize(),
+    })
   }
 
   /**
    * make a post private
    * @param params - The post ID
    */
-  async makePostPrivate({ params, auth }: HttpContext) {
+  async makePostPrivate({ params, auth, response }: HttpContext) {
     const user = auth.user!
     const postId = params.id
 
-    await Post.updateOrCreate({ id: postId, userId: user.id }, { visibility: 'private' })
+    const post = await Post.updateOrCreate(
+      { id: postId, userId: user.id },
+      { visibility: 'private' }
+    )
 
-    return { message: 'Post made private' }
+    return response.json({
+      message: 'Post made private',
+      postId: post.id,
+      visibility: post.visibility,
+    })
   }
 
   /**
    * make a post public
    * @param params - The post ID
    */
-  async makePostPublic({ params, auth }: HttpContext) {
+  async makePostPublic({ params, auth, response }: HttpContext) {
     const user = auth.user!
     const postId = params.id
-    await Post.updateOrCreate({ id: postId, userId: user.id }, { visibility: 'public' })
 
-    return { message: 'Post made public' }
+    const post = await Post.updateOrCreate(
+      { id: postId, userId: user.id },
+      { visibility: 'public' }
+    )
+
+    return response.json({
+      message: 'Post made public',
+      postId: post.id,
+      visibility: post.visibility,
+    })
   }
 }
-

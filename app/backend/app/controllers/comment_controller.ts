@@ -1,12 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Comment from '#models/comment'
-import CommentLike from '#models/comment_like'
 
 export default class CommentController {
   /**
    * Create a comment on a post (or reply)
    */
-  async createComment({ params, request, auth }: HttpContext) {
+  async createComment({ params, request, auth, response }: HttpContext) {
     const user = auth.user!
     const postId = params.id
     const { text, parentId } = request.only(['text', 'parentId'])
@@ -18,17 +17,21 @@ export default class CommentController {
       parentId: parentId ?? null,
     })
 
-    return {
+    // Load relationships for the response
+    await comment.load('author')
+    await comment.load('likes')
+
+    return response.json({
       message: 'Comment added',
-      comment,
-    }
+      comment: comment.serialize(),
+    })
   }
 
   /**
    * get comments of a post and replies
    * @param params - The post ID
    */
-  async getComments({ params, auth }: HttpContext) {
+  async getComments({ params, auth, response }: HttpContext) {
     const postId = params.id
     const user = auth.user!
 
@@ -50,7 +53,9 @@ export default class CommentController {
       }
     })
 
-    return formatted
+    return response.json({
+      comments: formatted,
+      count: formatted.length,
+    })
   }
 }
-
