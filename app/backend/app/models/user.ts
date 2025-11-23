@@ -1,13 +1,13 @@
-import { DateTime } from '../../node_modules/@types/luxon/index.js'
 import { compose } from '@adonisjs/core/helpers'
 import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import hash from '@adonisjs/core/services/hash'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import Post from './post.js'
-import Comment from './Comment.js'
+import Comment from './comment.js'
 import PostLike from './post_like.js'
 import CommentLike from './comment_like.js'
+import { DateTime } from 'luxon'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
