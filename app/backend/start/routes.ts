@@ -8,7 +8,9 @@
 */
 
 const AuthController = () => import('#controllers/auth_controllers')
-const FeedController = () => import('#controllers/feed_controller')
+const PostController = () => import('#controllers/post_controller')
+const CommentController = () => import('#controllers/comment_controller')
+const LikeController = () => import('#controllers/like_controller')
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 
@@ -30,14 +32,22 @@ router.post('/logout', [AuthController, 'logout']).use(
 // FEED (protected)
 router
   .group(() => {
-    router.get('/', [FeedController, 'index'])
-    router.post('/post', [FeedController, 'createPost'])
-    router.post('/post/:id/like', [FeedController, 'likePost'])
-    router.delete('/post/:id/like', [FeedController, 'unlikePost'])
+    // Post routes
+    router.get('/', [PostController, 'index'])
+    router.post('/post', [PostController, 'createPost'])
+    router.put('/post/:id/private', [PostController, 'makePostPrivate'])
+    router.put('/post/:id/public', [PostController, 'makePostPublic'])
 
-    router.post('/post/:id/comment', [FeedController, 'createComment'])
-    router.post('/comment/:id/like', [FeedController, 'likeComment'])
-    router.delete('/comment/:id/like', [FeedController, 'unlikeComment'])
+    // Like routes
+    router.post('/post/:id/like', [LikeController, 'likePost'])
+    router.get('/post/:id/likes', [LikeController, 'likeState'])
+    router.delete('/post/:id/like', [LikeController, 'unlikePost'])
+    router.post('/comment/:id/like', [LikeController, 'likeComment'])
+    router.delete('/comment/:id/like', [LikeController, 'unlikeComment'])
+
+    // Comment routes
+    router.post('/post/:id/comment', [CommentController, 'createComment'])
+    router.get('/post/:id/comments', [CommentController, 'getComments'])
   })
   .prefix('feed')
   .use(

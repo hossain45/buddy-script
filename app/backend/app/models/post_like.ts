@@ -14,12 +14,12 @@ export default class PostLike extends BaseModel {
   @column()
   declare userId: number
 
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
   @belongsTo(() => Post)
   public post!: BelongsTo<typeof Post>
 
   @belongsTo(() => User)
   public user!: BelongsTo<typeof User>
-
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime
 }

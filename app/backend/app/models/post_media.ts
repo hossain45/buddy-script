@@ -11,13 +11,7 @@ export default class PostMedia extends BaseModel {
   declare postId: number
 
   @column()
-  declare url: string // stored path or CDN url
-
-  @column()
-  declare mimeType?: string
-
-  @column()
-  declare meta?: string // optional JSON string for extra info (width/height etc.)
+  declare url: string // public url from ImgBB
 
   @column()
   declare order: number // display order if multiple images

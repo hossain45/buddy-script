@@ -4,7 +4,7 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
 import PostMedia from './post_media.js'
 import PostLike from './post_like.js'
-import Comment from './Comment.js'
+import Comment from './comment.js'
 
 export type PostVisibility = 'public' | 'private'
 

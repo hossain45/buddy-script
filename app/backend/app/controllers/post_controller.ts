@@ -1,14 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Post from '#models/post'
-import PostLike from '#models/post_like'
-import Comment from '#models/Comment'
-import CommentLike from '#models/comment_like'
 import PostMedia from '#models/post_media'
+import PostLike from '#models/post_like'
 import env from '#start/env'
 import axios from 'axios'
 import fs from 'node:fs'
 
-export default class FeedController {
+export default class PostController {
   /**
    * Get feed (public posts + user's private posts)
    */
@@ -46,7 +44,7 @@ export default class FeedController {
   /**
    * Create a new post (with IMGBB image upload)
    */
-  async createPost({ request, auth, response }: HttpContext) {
+  async createPost({ request, auth }: HttpContext) {
     const user = auth.user!
 
     const { text, visibility } = request.only(['text', 'visibility'])
@@ -88,7 +86,6 @@ export default class FeedController {
       await PostMedia.create({
         postId: post.id,
         url: imageUrl,
-        mimeType: file.type,
         order: i,
       })
     }
@@ -100,95 +97,28 @@ export default class FeedController {
   }
 
   /**
-   * Like a post
+   * make a post private
+   * @param params - The post ID
    */
-  async likePost({ params, auth, response }: HttpContext) {
+  async makePostPrivate({ params, auth }: HttpContext) {
     const user = auth.user!
     const postId = params.id
 
-    const already = await PostLike.query()
-      .where('user_id', user.id)
-      .where('post_id', postId)
-      .first()
+    await Post.updateOrCreate({ id: postId, userId: user.id }, { visibility: 'private' })
 
-    if (already) {
-      return response.badRequest({ message: 'Already liked' })
-    }
-
-    await PostLike.create({
-      userId: user.id,
-      postId,
-    })
-
-    return { message: 'Post liked' }
+    return { message: 'Post made private' }
   }
 
   /**
-   * Unlike a post
+   * make a post public
+   * @param params - The post ID
    */
-  async unlikePost({ params, auth }: HttpContext) {
+  async makePostPublic({ params, auth }: HttpContext) {
     const user = auth.user!
     const postId = params.id
+    await Post.updateOrCreate({ id: postId, userId: user.id }, { visibility: 'public' })
 
-    await PostLike.query().where('user_id', user.id).where('post_id', postId).delete()
-
-    return { message: 'Post unliked' }
-  }
-
-  /**
-   * Create a comment on a post (or reply)
-   */
-  async createComment({ params, request, auth }: HttpContext) {
-    const user = auth.user!
-    const postId = params.id
-    const { text, parentId } = request.only(['text', 'parentId'])
-
-    const comment = await Comment.create({
-      userId: user.id,
-      postId,
-      text,
-      parentId: parentId ?? null,
-    })
-
-    return {
-      message: 'Comment added',
-      comment,
-    }
-  }
-
-  /**
-   * Like a comment/reply
-   */
-  async likeComment({ params, auth, response }: HttpContext) {
-    const user = auth.user!
-    const commentId = params.id
-
-    const exists = await CommentLike.query()
-      .where('user_id', user.id)
-      .where('comment_id', commentId)
-      .first()
-
-    if (exists) {
-      return response.badRequest({ message: 'Already liked' })
-    }
-
-    await CommentLike.create({
-      userId: user.id,
-      commentId,
-    })
-
-    return { message: 'Comment liked' }
-  }
-
-  /**
-   * Unlike a comment/reply
-   */
-  async unlikeComment({ params, auth }: HttpContext) {
-    const user = auth.user!
-    const commentId = params.id
-
-    await CommentLike.query().where('user_id', user.id).where('comment_id', commentId).delete()
-
-    return { message: 'Comment unliked' }
+    return { message: 'Post made public' }
   }
 }
+
