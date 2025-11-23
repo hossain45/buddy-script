@@ -8,23 +8,24 @@ import { FormInput } from '../common/FormInput';
 import { SocialAuthButton } from '../common/SocialAuthButton';
 import { Logo } from '../common/Logo';
 import type { LoginPayload } from '../../types';
+import { useNavigate } from 'react-router';
 
 interface LoginFormProps {
   onSubmit: (data: LoginPayload) => Promise<void>;
   onForgotPassword: () => void;
-  onSignUp: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   onForgotPassword,
-  onSignUp,
 }) => {
   const [formData, setFormData] = useState<LoginPayload>({
     email: '',
     password: '',
     rememberMe: false,
   });
+
+  const navigate = useNavigate();
 
   const [errors, setErrors] = useState<Partial<Record<keyof LoginPayload, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -170,7 +171,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         <p className="text-sm text-gray-600">
           Don't have an account?{' '}
           <button
-            onClick={onSignUp}
+            onClick={() => navigate('/registration')}
             className="text-blue-600 hover:text-blue-500 font-medium"
           >
             Create New Account

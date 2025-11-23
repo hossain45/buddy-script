@@ -20,11 +20,6 @@ export const Login: React.FC = () => {
     // TODO: Implement forgot password flow
   };
 
-  const handleSignUp = () => {
-    console.log('Sign up clicked');
-    // TODO: Navigate to registration page
-  };
-
   return (
     <AuthLayout
       imageUrl={loginImage}
@@ -35,7 +30,6 @@ export const Login: React.FC = () => {
       <LoginForm
         onSubmit={handleLogin}
         onForgotPassword={handleForgotPassword}
-        onSignUp={handleSignUp}
       />
     </AuthLayout>
   );

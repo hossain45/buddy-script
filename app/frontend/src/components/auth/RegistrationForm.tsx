@@ -8,15 +8,14 @@ import { FormInput } from '../common/FormInput';
 import { SocialAuthButton } from '../common/SocialAuthButton';
 import { Logo } from '../common/Logo';
 import type { CreateUserPayload } from '../../types';
+import { useNavigate } from 'react-router';
 
 interface RegistrationFormProps {
   onSubmit: (data: CreateUserPayload) => Promise<void>;
-  onLogin: () => void;
 }
 
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSubmit,
-  onLogin,
 }) => {
   const [formData, setFormData] = useState<CreateUserPayload>({
     firstName: '',
@@ -29,6 +28,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof CreateUserPayload | 'terms', string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -88,6 +89,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     try {
       await onSubmit(formData);
     } catch (error) {
+      console.log(error);
       setErrors({ email: 'Registration failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
@@ -224,7 +226,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         <p className="text-sm text-gray-600">
           Already have an account?{' '}
           <button
-            onClick={onLogin}
+            onClick={() => navigate('/login')}
             className="text-blue-600 hover:text-blue-500 font-medium"
           >
             Login
