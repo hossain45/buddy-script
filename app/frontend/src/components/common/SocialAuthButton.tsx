@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import googleIcon from '../../assets/images/google.svg';
 
 interface SocialAuthButtonProps {
   provider: 'google' | 'facebook' | 'twitter';
@@ -13,7 +14,7 @@ interface SocialAuthButtonProps {
 }
 
 const providerIcons: Record<string, string> = {
-  google: '/images/google.svg',
+  google: googleIcon,
 };
 
 export const SocialAuthButton: React.FC<SocialAuthButtonProps> = ({

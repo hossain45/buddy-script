@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import logo from '../../assets/images/logo.svg';
 
 interface LogoProps {
   className?: string;
@@ -20,7 +21,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'medium' }) =
   return (
     <div className={`flex justify-center mb-8 ${className}`}>
       <img
-        src="/images/logo.svg"
+        src={logo}
         alt="Buddy Script"
         className={`${sizeClasses[size]} w-auto`}
       />

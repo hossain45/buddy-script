@@ -69,6 +69,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     try {
       await onSubmit(formData);
     } catch (error) {
+      console.log(error);
       setErrors({ email: 'Invalid credentials' });
     } finally {
       setIsSubmitting(false);

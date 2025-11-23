@@ -7,6 +7,7 @@ import React from 'react';
 import { AuthLayout } from '../components/layouts/AuthLayout';
 import { LoginForm } from '../components/auth/LoginForm';
 import type { LoginPayload } from '../types';
+import loginImage from '../assets/images/login.png';
 
 export const Login: React.FC = () => {
   const handleLogin = async (data: LoginPayload) => {
@@ -26,7 +27,8 @@ export const Login: React.FC = () => {
 
   return (
     <AuthLayout
-      imageUrl="/images/login.png"
+      imageUrl={loginImage}
+      imageDarkUrl={loginImage}
       imageAlt="Login"
       imagePosition="left"
     >
