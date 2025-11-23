@@ -3,31 +3,61 @@
  * Responsibility: Handle registration form state and submission
  */
 
-import React, { useState } from 'react';
-import { FormInput } from '../common/FormInput';
-import { SocialAuthButton } from '../common/SocialAuthButton';
-import { Logo } from '../common/Logo';
-import type { CreateUserPayload } from '../../types';
-import { useNavigate } from 'react-router';
+import React, { useState } from "react";
+import { FormInput } from "../common/FormInput";
+import { SocialAuthButton } from "../common/SocialAuthButton";
+import { Logo } from "../common/Logo";
+import type { CreateUserPayload } from "../../types";
+import { useNavigate } from "react-router";
 
 interface RegistrationFormProps {
   onSubmit: (data: CreateUserPayload) => Promise<void>;
+  isLoading?: boolean;
+  error?: unknown;
 }
 
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSubmit,
+  isLoading: externalLoading,
+  error: externalError,
 }) => {
   const [formData, setFormData] = useState<CreateUserPayload>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof CreateUserPayload | 'terms', string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof CreateUserPayload | "terms", string>>>(
+    {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get error message from RTK Query error
+  const getErrorMessage = (error: unknown): string | undefined => {
+    if (error && typeof error === "object" && "data" in error) {
+      const errorData = error.data as {
+        message?: string;
+        error?: string;
+        errors?: Record<string, string[]>;
+      };
+      if (errorData.errors) {
+        // Handle validation errors
+        const firstError = Object.values(errorData.errors)[0];
+        return Array.isArray(firstError) ? firstError[0] : firstError;
+      }
+      return errorData.message || errorData.error;
+    }
+    if (error && typeof error === "object" && "error" in error) {
+      return (error.error as string) || "An error occurred";
+    }
+    return undefined;
+  };
+
+  const errorMessage = externalError ? getErrorMessage(externalError) : undefined;
+  const isFormLoading = externalLoading || isSubmitting;
 
   const navigate = useNavigate();
 
@@ -44,36 +74,36 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof CreateUserPayload | 'terms', string>> = {};
+    const newErrors: Partial<Record<keyof CreateUserPayload | "terms", string>> = {};
 
     if (!formData.firstName) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = "First name is required";
     }
 
     if (!formData.lastName) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = "Last name is required";
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = "Email is invalid";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     if (!agreeToTerms) {
-      newErrors.terms = 'You must agree to the terms and conditions';
+      newErrors.terms = "You must agree to the terms and conditions";
     }
 
     setErrors(newErrors);
@@ -88,16 +118,22 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
+      // Clear errors on success
+      setErrors({});
     } catch (error) {
       console.log(error);
-      setErrors({ email: 'Registration failed. Please try again.' });
+      const errorMsg = getErrorMessage(error);
+      setErrors({ email: errorMsg || "Registration failed. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Show external error if present
+  const displayError = errorMessage;
+
   const handleGoogleAuth = () => {
-    console.log('Google registration');
+    console.log("Google registration");
   };
 
   return (
@@ -106,9 +142,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       <div className="text-center mb-8">
         <p className="text-gray-600 text-sm mb-2">Get Started Now</p>
-        <h4 className="text-2xl font-bold text-gray-900">
-          Create your account
-        </h4>
+        <h4 className="text-2xl font-bold text-gray-900">Create your account</h4>
       </div>
 
       <SocialAuthButton
@@ -202,31 +236,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </div>
           <div className="ml-2">
             <label htmlFor="agreeToTerms" className="text-sm text-gray-700 cursor-pointer">
-              I agree to the{' '}
+              I agree to the{" "}
               <a href="#" className="text-blue-600 hover:text-blue-500 font-medium">
                 terms and conditions
               </a>
             </label>
-            {errors.terms && (
-              <div className="form-error mt-1">{errors.terms}</div>
-            )}
+            {errors.terms && <div className="form-error mt-1">{errors.terms}</div>}
           </div>
         </div>
 
-        <button
-          type="submit"
-          className="btn-primary w-full mt-6"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Creating account...' : 'Register now'}
+        {displayError && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{displayError}</p>
+          </div>
+        )}
+
+        <button type="submit" className="btn-primary w-full mt-6" disabled={isFormLoading}>
+          {isFormLoading ? "Creating account..." : "Register now"}
         </button>
       </form>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate("/login")}
             className="text-blue-600 hover:text-blue-500 font-medium"
           >
             Login

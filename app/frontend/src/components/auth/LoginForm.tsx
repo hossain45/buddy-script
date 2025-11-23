@@ -3,25 +3,29 @@
  * Responsibility: Handle login form state and submission
  */
 
-import React, { useState } from 'react';
-import { FormInput } from '../common/FormInput';
-import { SocialAuthButton } from '../common/SocialAuthButton';
-import { Logo } from '../common/Logo';
-import type { LoginPayload } from '../../types';
-import { useNavigate } from 'react-router';
+import React, { useState } from "react";
+import { FormInput } from "../common/FormInput";
+import { SocialAuthButton } from "../common/SocialAuthButton";
+import { Logo } from "../common/Logo";
+import type { LoginPayload } from "../../types";
+import { useNavigate } from "react-router";
 
 interface LoginFormProps {
   onSubmit: (data: LoginPayload) => Promise<void>;
   onForgotPassword: () => void;
+  isLoading?: boolean;
+  error?: unknown;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   onForgotPassword,
+  isLoading: externalLoading,
+  error: externalError,
 }) => {
   const [formData, setFormData] = useState<LoginPayload>({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     rememberMe: false,
   });
 
@@ -30,11 +34,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [errors, setErrors] = useState<Partial<Record<keyof LoginPayload, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Get error message from RTK Query error
+  const getErrorMessage = (error: unknown): string | undefined => {
+    if (error && typeof error === "object" && "data" in error) {
+      const errorData = error.data as { message?: string; error?: string };
+      return errorData.message || errorData.error;
+    }
+    if (error && typeof error === "object" && "error" in error) {
+      return (error.error as string) || "An error occurred";
+    }
+    return undefined;
+  };
+
+  const errorMessage = externalError ? getErrorMessage(externalError) : undefined;
+  const isFormLoading = externalLoading || isSubmitting;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
     // Clear error when user types
     if (errors[name as keyof LoginPayload]) {
@@ -46,15 +65,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     const newErrors: Partial<Record<keyof LoginPayload, string>> = {};
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = "Email is invalid";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -69,16 +88,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
+      // Clear errors on success
+      setErrors({});
     } catch (error) {
       console.log(error);
-      setErrors({ email: 'Invalid credentials' });
+      const errorMsg = getErrorMessage(error);
+      setErrors({ email: errorMsg || "Invalid credentials" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Show external error if present
+  const displayError = errorMessage || errors.email || errors.password;
+
   const handleGoogleAuth = () => {
-    console.log('Google authentication');
+    console.log("Google authentication");
   };
 
   return (
@@ -87,9 +112,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       <div className="text-center mb-8">
         <p className="text-gray-600 text-sm mb-2">Welcome back</p>
-        <h4 className="text-2xl font-bold text-gray-900">
-          Login to your account
-        </h4>
+        <h4 className="text-2xl font-bold text-gray-900">Login to your account</h4>
       </div>
 
       <SocialAuthButton
@@ -141,10 +164,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               onChange={handleChange}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
             />
-            <label
-              htmlFor="rememberMe"
-              className="ml-2 block text-sm text-gray-700 cursor-pointer"
-            >
+            <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700 cursor-pointer">
               Remember me
             </label>
           </div>
@@ -158,20 +178,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </button>
         </div>
 
-        <button
-          type="submit"
-          className="btn-primary w-full mt-6"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Logging in...' : 'Login now'}
+        {displayError && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{displayError}</p>
+          </div>
+        )}
+
+        <button type="submit" className="btn-primary w-full mt-6" disabled={isFormLoading}>
+          {isFormLoading ? "Logging in..." : "Login now"}
         </button>
       </form>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <button
-            onClick={() => navigate('/registration')}
+            onClick={() => navigate("/registration")}
             className="text-blue-600 hover:text-blue-500 font-medium"
           >
             Create New Account

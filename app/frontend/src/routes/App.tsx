@@ -3,9 +3,6 @@ import { Login, Registration, Feed } from "../pages";
 import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
-  // Replace this with a real authentication state later
-  const isAuthenticated = false;
-
   return (
     <BrowserRouter>
       <Routes>
@@ -15,7 +12,7 @@ function App() {
         <Route
           path="/feed"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
+            <ProtectedRoute>
               <Feed />
             </ProtectedRoute>
           }
