@@ -6,32 +6,20 @@
 import { baseApi } from './baseApi';
 import type { User, LoginPayload, CreateUserPayload } from '../../types';
 
-/**
- * Authentication API response types
- */
 export interface LoginResponse {
   message: string;
   user: User;
 }
-
 export interface RegisterResponse {
   message: string;
   user: User;
 }
-
 export interface LogoutResponse {
   message: string;
 }
 
-/**
- * Authentication API endpoints
- */
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    /**
-     * Login endpoint
-     * POST /login
-     */
     login: builder.mutation<LoginResponse, LoginPayload>({
       query: (credentials) => ({
         url: '/login',
@@ -44,10 +32,6 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ['User'],
     }),
 
-    /**
-     * Registration endpoint
-     * POST /register
-     */
     register: builder.mutation<RegisterResponse, Omit<CreateUserPayload, 'confirmPassword'>>({
       query: (userData) => ({
         url: '/register',
@@ -62,10 +46,6 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ['User'],
     }),
 
-    /**
-     * Logout endpoint
-     * POST /logout (protected)
-     */
     logout: builder.mutation<LogoutResponse, void>({
       query: () => ({
         url: '/logout',

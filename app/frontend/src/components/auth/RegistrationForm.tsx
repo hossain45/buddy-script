@@ -9,6 +9,8 @@ import { SocialAuthButton } from "../common/SocialAuthButton";
 import { Logo } from "../common/Logo";
 import type { CreateUserPayload } from "../../types";
 import { useNavigate } from "react-router";
+import { getErrorMessage } from "../../utils/errorUtils";
+import { validateRegistrationForm, type RegistrationFormErrors } from "../../utils/validationUtils";
 
 interface RegistrationFormProps {
   onSubmit: (data: CreateUserPayload) => Promise<void>;
@@ -30,31 +32,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   });
 
   const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof CreateUserPayload | "terms", string>>>(
-    {}
-  );
+  const [errors, setErrors] = useState<RegistrationFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Get error message from RTK Query error
-  const getErrorMessage = (error: unknown): string | undefined => {
-    if (error && typeof error === "object" && "data" in error) {
-      const errorData = error.data as {
-        message?: string;
-        error?: string;
-        errors?: Record<string, string[]>;
-      };
-      if (errorData.errors) {
-        // Handle validation errors
-        const firstError = Object.values(errorData.errors)[0];
-        return Array.isArray(firstError) ? firstError[0] : firstError;
-      }
-      return errorData.message || errorData.error;
-    }
-    if (error && typeof error === "object" && "error" in error) {
-      return (error.error as string) || "An error occurred";
-    }
-    return undefined;
-  };
 
   const errorMessage = externalError ? getErrorMessage(externalError) : undefined;
   const isFormLoading = externalLoading || isSubmitting;
@@ -74,38 +53,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof CreateUserPayload | "terms", string>> = {};
-
-    if (!formData.firstName) {
-      newErrors.firstName = "First name is required";
-    }
-
-    if (!formData.lastName) {
-      newErrors.lastName = "Last name is required";
-    }
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (!agreeToTerms) {
-      newErrors.terms = "You must agree to the terms and conditions";
-    }
-
+    const newErrors = validateRegistrationForm(formData, agreeToTerms);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

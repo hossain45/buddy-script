@@ -9,6 +9,8 @@ import { SocialAuthButton } from "../common/SocialAuthButton";
 import { Logo } from "../common/Logo";
 import type { LoginPayload } from "../../types";
 import { useNavigate } from "react-router";
+import { getErrorMessage } from "../../utils/errorUtils";
+import { validateLoginForm, type LoginFormErrors } from "../../utils/validationUtils";
 
 interface LoginFormProps {
   onSubmit: (data: LoginPayload) => Promise<void>;
@@ -31,20 +33,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
   const navigate = useNavigate();
 
-  const [errors, setErrors] = useState<Partial<Record<keyof LoginPayload, string>>>({});
+  const [errors, setErrors] = useState<LoginFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Get error message from RTK Query error
-  const getErrorMessage = (error: unknown): string | undefined => {
-    if (error && typeof error === "object" && "data" in error) {
-      const errorData = error.data as { message?: string; error?: string };
-      return errorData.message || errorData.error;
-    }
-    if (error && typeof error === "object" && "error" in error) {
-      return (error.error as string) || "An error occurred";
-    }
-    return undefined;
-  };
 
   const errorMessage = externalError ? getErrorMessage(externalError) : undefined;
   const isFormLoading = externalLoading || isSubmitting;
@@ -62,20 +52,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof LoginPayload, string>> = {};
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
+    const newErrors = validateLoginForm(formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

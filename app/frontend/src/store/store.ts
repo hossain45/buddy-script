@@ -8,19 +8,9 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { baseApi } from './api/baseApi';
 import authReducer from './slices/authSlice';
 
-/**
- * Root state type
- */
 export type RootState = ReturnType<typeof store.getState>;
-
-/**
- * App dispatch type
- */
 export type AppDispatch = typeof store.dispatch;
 
-/**
- * Configure Redux store
- */
 export const store = configureStore({
   reducer: {
     // API slice
@@ -42,4 +32,3 @@ export const store = configureStore({
 setupListeners(store.dispatch);
 
 export default store;
-
