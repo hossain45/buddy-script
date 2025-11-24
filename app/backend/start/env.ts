@@ -10,8 +10,16 @@
 */
 
 import { Env } from '@adonisjs/core/env'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { dirname, resolve } from 'node:path'
 
-export default await Env.create(new URL('../', import.meta.url), {
+// Determine the project root: if we're in build/start, go up 2 levels, otherwise 1 level
+const currentDir = dirname(fileURLToPath(import.meta.url))
+const isBuild = currentDir.includes('/build/')
+const projectRoot = isBuild ? resolve(currentDir, '../../') : resolve(currentDir, '../')
+const projectRootUrl = pathToFileURL(resolve(projectRoot, './'))
+
+export default await Env.create(projectRootUrl, {
   NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
   PORT: Env.schema.number(),
   APP_KEY: Env.schema.string(),
