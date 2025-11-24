@@ -7,6 +7,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { baseApi } from './api/baseApi';
 import authReducer from './slices/authSlice';
+import postReducer from './slices/postSlice';
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
@@ -17,6 +18,7 @@ export const store = configureStore({
     [baseApi.reducerPath]: baseApi.reducer,
     // Feature slices
     auth: authReducer,
+    post: postReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

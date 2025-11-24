@@ -23,8 +23,8 @@ export const baseApi = createApi({
     baseUrl: API_BASE_URL,
     credentials: 'include', // Include cookies for session-based auth
     prepareHeaders: (headers) => {
-      // Add any default headers here if needed
-      headers.set('Content-Type', 'application/json');
+      // RTK Query automatically sets Content-Type for JSON bodies
+      // and handles FormData correctly (leaves Content-Type unset for browser to set boundary)
       headers.set('Accept', 'application/json');
       return headers;
     },
