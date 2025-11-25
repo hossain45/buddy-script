@@ -49,7 +49,7 @@ export const commentApi = baseApi.injectEndpoints({
         url: `/feed/post/${postId}/comments`,
         method: 'GET',
       }),
-      providesTags: (result, error, postId) => [
+      providesTags: (_result, _error, postId) => [
         { type: 'Comment', id: `post-${postId}` },
         { type: 'Comment', id: 'LIST' },
       ],

@@ -4,7 +4,7 @@
  */
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { Post } from '../../types';
+
 
 interface PostState {
   selectedPostId: number | null;

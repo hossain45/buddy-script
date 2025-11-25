@@ -17,7 +17,7 @@ export default class AuthController {
       // Handle validation errors
       if (error.code === 'E_VALIDATION_FAILURE') {
         return response.status(422).json({
-          message: 'Validation failed',
+          message: error.messages,
           errors: error.messages,
         })
       }

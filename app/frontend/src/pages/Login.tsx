@@ -14,7 +14,7 @@ export const Login: React.FC = () => {
 
   const handleLogin = async (data: { email: string; password: string; rememberMe?: boolean }) => {
     try {
-      const { user } = await login(data).unwrap();
+      const { user } = await login(data).unwrap();      
       dispatch(setUser(user));
       navigate("/feed", { replace: true });
     } catch (err) {

@@ -20,6 +20,7 @@ export { Header } from './feed/Header';
 export { NotificationDropdown } from './feed/NotificationDropdown';
 export { PostCard } from './feed/PostCard';
 export { CreatePost } from './feed/CreatePost';
-export { Sidebar } from './feed/Sidebar';
+export { LeftSidebar } from './feed/LeftSidebar';
+export { RightSidebar } from './feed/RightSidebar';
 export { ThemeToggle } from './feed/ThemeToggle';
 

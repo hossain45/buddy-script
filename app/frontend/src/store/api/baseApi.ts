@@ -5,7 +5,7 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const API_BASE_URL =  'http://localhost:3333';
+const API_BASE_URL = "https://buddy-script-production.up.railway.app/";
 
 export interface BaseQueryError {
   status?: number;

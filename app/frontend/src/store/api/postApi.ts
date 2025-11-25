@@ -112,7 +112,7 @@ export const postApi = baseApi.injectEndpoints({
         url: `/feed/post/${postId}/likes`,
         method: 'GET',
       }),
-      providesTags: (result, error, postId) => [{ type: 'Like', id: `post-${postId}` }],
+      providesTags: (_result, _error, postId) => [{ type: 'Like', id: `post-${postId}` }],
     }),
 
     // Unlike a post

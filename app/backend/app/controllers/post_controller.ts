@@ -28,12 +28,16 @@ export default class PostController {
           .preload('replies', (replyQuery) => replyQuery.preload('author').preload('likes'))
       )
 
-    const formatted = posts.map((post) => {
-      const isLiked = post.likes.some((like) => like.userId === user.id)
+    const formatted = posts?.map((post) => {
+      const isLiked = post?.likes?.some((like) => like.userId === user.id)
+      const likesCount = post?.likes?.length || 0
+      const commentsCount = post?.comments?.length || 0
 
       return {
         ...post.serialize(),
         isLiked,
+        likesCount,
+        commentsCount,
       }
     })
 
@@ -51,49 +55,58 @@ export default class PostController {
 
     const { text, visibility } = request.only(['text', 'visibility'])
 
-    const post = await Post.create({
-      text,
-      visibility: visibility ?? 'public',
-      userId: user.id,
-    })
+    // Create and save the post first
+    const post = new Post()
+    post.text = text
+    post.visibility = visibility ?? 'public'
+    post.userId = user.id
+    await post.save()
 
     const files = request.files('images')
 
     // handling image upload to IMGBB
-    for (const [i, file] of files.entries()) {
-      if (!file.isValid) continue
+    if (files && files.length > 0) {
+      for (const [i, file] of files.entries()) {
+        if (!file.isValid) continue
 
-      const imgData = request.file('photo', {
-        size: '150kb',
-        extnames: ['jpg', 'png', 'jpeg'],
-      })
+        try {
+          // Convert file → Base64
+          const fileBuffer = fs.readFileSync(file.tmpPath!)
+          const base64Image = fileBuffer.toString('base64')
+          
+          // Clean up the temporary file
+          fs.unlinkSync(file.tmpPath!)
 
-      // Convert file → Base64
-      const fileBuffer = fs.readFileSync(imgData!.tmpPath!)
-      const base64Image = fileBuffer.toString('base64')
-      // Clean up the temporary file
-      fs.unlinkSync(imgData!.tmpPath!)
+          // Upload to ImgBB using URLSearchParams (application/x-www-form-urlencoded)
+          // ImgBB does not support JSON payloads
+          const formData = new URLSearchParams()
+          formData.append('image', base64Image)
 
-      // Upload to ImgBB
-      const uploadRes = await axios.post(
-        `https://api.imgbb.com/1/upload?key=${env.get('IMGBB_API_KEY')}`,
-        {
-          image: base64Image,
+          const uploadRes = await axios.post(
+            `https://api.imgbb.com/1/upload?key=${env.get('IMGBB_API_KEY')}`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+            }
+          )
+
+          const imageUrl = uploadRes.data.data.url
+
+          await PostMedia.create({
+            postId: post.id,
+            url: imageUrl,
+            order: i,
+          })
+        } catch (error) {
+          console.error('Error uploading image to ImgBB:', error.response?.data || error.message)
+          // Continue with other images even if one fails
         }
-      )
-
-      const imageUrl = uploadRes.data.data.url
-      console.log(imageUrl)
-
-      await PostMedia.create({
-        postId: post.id,
-        url: imageUrl,
-        order: i,
-      })
+      }
     }
 
-    // Refresh and load relationships
-    await post.refresh()
+    // Load relationships after everything is saved
     await post.load('author')
     await post.load('media')
     await post.load('likes')
@@ -112,10 +125,13 @@ export default class PostController {
     const user = auth.user!
     const postId = params.id
 
-    const post = await Post.updateOrCreate(
-      { id: postId, userId: user.id },
-      { visibility: 'private' }
-    )
+    const post = await Post.query()
+      .where('id', postId)
+      .where('user_id', user.id)
+      .firstOrFail()
+
+    post.visibility = 'private'
+    await post.save()
 
     return response.json({
       message: 'Post made private',
@@ -132,10 +148,13 @@ export default class PostController {
     const user = auth.user!
     const postId = params.id
 
-    const post = await Post.updateOrCreate(
-      { id: postId, userId: user.id },
-      { visibility: 'public' }
-    )
+    const post = await Post.query()
+      .where('id', postId)
+      .where('user_id', user.id)
+      .firstOrFail()
+
+    post.visibility = 'public'
+    await post.save()
 
     return response.json({
       message: 'Post made public',
