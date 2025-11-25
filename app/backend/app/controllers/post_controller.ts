@@ -14,7 +14,9 @@ export default class PostController {
 
     const posts = await Post.query()
       .where((query) => {
-        query.where('visibility', 'public').orWhere('user_id', user.id)
+        query.where('visibility', 'public').orWhere((q) => {
+          q.where('visibility', 'private').where('user_id', user.id)
+        })
       })
       .orderBy('created_at', 'desc')
       .preload('author')
